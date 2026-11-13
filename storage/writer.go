@@ -22,36 +22,12 @@ func SavePostIfNotExist(cfg *config.Config, filePath string, article afdian.Post
 	fileExists := err == nil || os.IsExist(err)
 	if !fileExists {
 		slog.Info("Saving file:", "path", filePath)
-		content, audio, video, err := afdian.GetPostContent(cfg, article.Url, authToken, converter)
-		if err != nil {
-			return false, err
-		}
-		//TODO:不支持图文混排
-		picContent, err := getPictures(filePath, article)
-		if err != nil {
-			return false, err
-		}
-
-		audioContent := renderMedia(cfg, filePath, article.Name, audio, "audio")
-		videoContent := renderMedia(cfg, filePath, article.Name, video, "video")
-		mediaContent := ""
-		if audioContent != "" || videoContent != "" {
-			mediaContent = "### 媒体\n\n" + audioContent + videoContent
-		}
-
 		referUrl := strings.Replace(article.Url, "post", "p", 1)
-		articleContent := fmt.Sprintf("## %s\n\n### Refer\n\n%s\n\n### 正文\n\n%s\n\n%s\n\n%s",
-			article.Name, referUrl, content, picContent, mediaContent)
-
-		if !disableComment {
-			commentString, hotCommentString, err := afdian.GetPostComment(cfg, article.Url, authToken)
-			if err != nil {
-				return false, err
-			}
-			articleContent = fmt.Sprintf("%s\n\n%s\n\n%s", articleContent, hotCommentString, commentString)
+		articleContent, err := buildPostMarkdown(cfg, filePath, article, referUrl, authToken, disableComment, converter)
+		if err != nil {
+			return false, err
 		}
-
-		if err := os.WriteFile(filePath, []byte(articleContent), os.ModePerm); err != nil {
+		if err := WriteFileAtomic(filePath, []byte(articleContent)); err != nil {
 			return false, err
 		}
 	} else {
@@ -59,6 +35,38 @@ func SavePostIfNotExist(cfg *config.Config, filePath string, article afdian.Post
 		return true, nil
 	}
 	return false, nil
+}
+
+// buildPostMarkdown 抓取正文、图片、媒体与评论，拼装为四段结构（标题、Refer、正文、评论）的 markdown
+func buildPostMarkdown(cfg *config.Config, filePath string, article afdian.Post, referUrl string, authToken string, disableComment bool, converter *md.Converter) (string, error) {
+	content, audio, video, err := afdian.GetPostContent(cfg, article.Url, authToken, converter)
+	if err != nil {
+		return "", err
+	}
+	//TODO:不支持图文混排
+	picContent, err := getPictures(filePath, article)
+	if err != nil {
+		return "", err
+	}
+
+	audioContent := renderMedia(cfg, filePath, article.Name, audio, "audio")
+	videoContent := renderMedia(cfg, filePath, article.Name, video, "video")
+	mediaContent := ""
+	if audioContent != "" || videoContent != "" {
+		mediaContent = "### 媒体\n\n" + audioContent + videoContent
+	}
+
+	articleContent := fmt.Sprintf("## %s\n\n### Refer\n\n%s\n\n### 正文\n\n%s\n\n%s\n\n%s",
+		article.Name, referUrl, content, picContent, mediaContent)
+
+	if !disableComment {
+		commentString, hotCommentString, err := afdian.GetPostComment(cfg, article.Url, authToken)
+		if err != nil {
+			return "", err
+		}
+		articleContent = fmt.Sprintf("%s\n\n%s\n\n%s", articleContent, hotCommentString, commentString)
+	}
+	return articleContent, nil
 }
 
 func getPictures(filePath string, article afdian.Post) (string, error) {
