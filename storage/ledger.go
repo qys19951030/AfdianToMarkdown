@@ -174,10 +174,10 @@ func WriteFileAtomic(path string, content []byte) error {
 // referHashRegexp 从 markdown 的 Refer 行提取 canonical id，兼容任意主站域名：
 //   - https://afdian.com/p/<hash>
 //   - https://afdian.com/album/<albumId>/<hash>
-var referHashRegexp = regexp.MustCompile(`/(?:p|album/[a-zA-Z0-9]+)/([a-zA-Z0-9]+)`)
+var referHashRegexp = regexp.MustCompile(`/(?:p|album/[a-zA-Z0-9-]+)/([a-zA-Z0-9-]+)`)
 
 // shopLinkRegexp 从电铺 markdown 的链接行提取 plan_id
-var shopLinkRegexp = regexp.MustCompile(`/item/([a-zA-Z0-9]+)`)
+var shopLinkRegexp = regexp.MustCompile(`/item/([a-zA-Z0-9-]+)`)
 
 // ExtractReferHash 从 markdown 内容中提取 Refer 的 canonical id，缺失返回 ""
 func ExtractReferHash(content string) string {

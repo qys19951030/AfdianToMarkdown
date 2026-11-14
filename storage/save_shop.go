@@ -51,7 +51,7 @@ func (s *ShopSaver) SaveProduct(product afdian.Product) (upToDate bool, err erro
 		}
 		if rec.Fingerprint == fp {
 			// 描述未变：文件名一致则跳过；名称/时间变化则按 canonical id 改名替换
-			for _, p := range rec.Paths {
+			for _, p := range append([]string(nil), rec.Paths...) {
 				if pathDir(p) != s.Category {
 					continue
 				}

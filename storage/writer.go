@@ -22,7 +22,7 @@ func SavePostIfNotExist(cfg *config.Config, filePath string, article afdian.Post
 	fileExists := err == nil || os.IsExist(err)
 	if !fileExists {
 		slog.Info("Saving file:", "path", filePath)
-		referUrl := strings.Replace(article.Url, "post", "p", 1)
+		referUrl := strings.Replace(article.Url, "/post/", "/p/", 1)
 		articleContent, err := buildPostMarkdown(cfg, filePath, article, referUrl, authToken, disableComment, converter)
 		if err != nil {
 			return false, err

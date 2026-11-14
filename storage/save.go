@@ -117,7 +117,7 @@ func (s *PostSaver) listFingerprint(article afdian.Post) string {
 // 返回 upToDate（本类别文件已存在且无需任何请求）、needFetch（磁盘无副本需重新抓正文）。
 func (s *PostSaver) ensureLocalCopy(rec *PostRecord, article afdian.Post, desiredRel string) (upToDate bool, needFetch bool, err error) {
 	// 本类别已有记录：文件名一致则无需动作；标题/时间变化则按 canonical id 改名替换，不留两份
-	for _, p := range rec.Paths {
+	for _, p := range append([]string(nil), rec.Paths...) {
 		if pathDir(p) != s.Category {
 			continue
 		}
@@ -251,9 +251,10 @@ func idFromURL(articleUrl string) string {
 	return parts[len(parts)-1]
 }
 
-// referOf 与 writer 保持一致的 Refer 链接形式
+// referOf 与 writer 保持一致的 Refer 链接形式：/post/<id> 转为短链 /p/<id>，
+// 只替换路径段，避免误伤 id 中含有的 "post" 子串
 func referOf(articleUrl string) string {
-	return strings.Replace(articleUrl, "post", "p", 1)
+	return strings.Replace(articleUrl, "/post/", "/p/", 1)
 }
 
 // pathDir 返回相对路径所在的类别目录（正斜杠形式）
@@ -263,7 +264,7 @@ func pathDir(relPath string) string {
 
 // removePath 从路径列表中移除指定项
 func removePath(paths []string, target string) []string {
-	out := paths[:0]
+	out := make([]string, 0, len(paths))
 	for _, p := range paths {
 		if p != target {
 			out = append(out, p)
