@@ -10,24 +10,24 @@ type Album struct {
 
 // Post 文章信息
 type Post struct {
-	ID          string   // canonical id（post_id，即 Refer 中的 post hash）
+	ID          string // canonical id（post_id，即 Refer 中的 post hash）
 	Name        string
 	Url         string
-	Content     string   // 列表接口返回的正文 HTML（用于计算指纹，避免重复请求正文）
+	Content     string // 列表接口返回的正文 HTML（用于计算指纹，避免重复请求正文）
 	Pictures    []string
 	PublishTime time.Time
 }
 
 // Product 商品信息
 type Product struct {
-	ID          string
-	TagID       string
-	Name        string
-	Url         string
-	Pic         string
-	Desc        string
-	Price       string
-	UpdateTime  time.Time
+	ID         string
+	TagID      string
+	Name       string
+	Url        string
+	Pic        string
+	Desc       string
+	Price      string
+	UpdateTime time.Time
 }
 
 // Cookie 从 Chrome 中使用cookie master导出的 Cookies

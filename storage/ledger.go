@@ -38,14 +38,14 @@ type PostRecord struct {
 	Title       string   `json:"title"`                 // 最近一次见到的标题（安全文件名形式）
 	PublishTime int64    `json:"publish_time"`          // 发布时间（unix 秒）
 	Pictures    []string `json:"pictures,omitempty"`    // 图片地址，用于失败重试
-	UpdatedAt   string   `json:"updated_at"`           // 最近一次采集时间（RFC3339）
+	UpdatedAt   string   `json:"updated_at"`            // 最近一次采集时间（RFC3339）
 }
 
 // ledgerFile 账本磁盘格式
 type ledgerFile struct {
-	Version int                  `json:"version"`
-	Cursors map[string]string    `json:"cursors"` // 各类别分页游标：motions=>publish_sn，album:{id}=>next lastRank，shop:{tag}=>next page
-	Posts   map[string]*PostRecord `json:"posts"` // canonical id => 记录
+	Version int                    `json:"version"`
+	Cursors map[string]string      `json:"cursors"` // 各类别分页游标：motions=>publish_sn，album:{id}=>next lastRank，shop:{tag}=>next page
+	Posts   map[string]*PostRecord `json:"posts"`   // canonical id => 记录
 }
 
 // Ledger 作者级采集账本
