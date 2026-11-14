@@ -64,7 +64,8 @@ CLI (main.go) → config.Config 创建
 - 请求超时与重试：`NewRequestGet` 每次请求带 `RequestTimeout`（默认 30s）超时，失败按指数退避重试 `RetryAttempts`（默认 3）次（`avast/retry-go`）；仅对传输错误、5xx、429 重试，4xx 立即失败。三个参数为包级变量，测试中可覆盖
 - 文件命名：`{index}_{标题}.md`，不安全字符替换为下划线
 - 图片下载到 `.assets/` 子目录，Markdown 中使用相对路径引用
-- `SavePostIfNotExist` 跳过已存在的文件（幂等下载）
+- 采集以作者目录下的账本 `ledger.json` 为准（`storage/ledger.go`）：分页游标续跑、正文指纹增量、失败记录与重试；`storage/save.go` 的 `PostSaver`/`ShopSaver` 负责按账本保存，同一篇文章跨类别只抓一次正文，标题/时间变化按 canonical id 改名替换
+- 账本与 markdown 落盘均为原子写（临时文件 + rename）；账本损坏时按现有 markdown 重建，不崩溃
 
 ### 数据目录结构
 
@@ -72,6 +73,7 @@ CLI (main.go) → config.Config 创建
 {AppDataPath}/
 ├── data/
 │   └── {作者url_slug}/
+│       ├── ledger.json          # 采集账本（游标、指纹、失败状态、落盘路径）
 │       ├── motions/           # 动态
 │       │   └── 0_标题.md
 │       └── {作品集名}/        # 作品集
@@ -88,7 +90,7 @@ CLI (main.go) → config.Config 创建
 
 ## 注意事项
 
-- 部分测试直接调用真实 API（`afdian_test.go`），需要仓库根存在有效 cookies.json（测试通过 `../cookies.json`、`../data` 相对路径加载）；`client_test.go` 用 httptest 本地验证超时/重试，不依赖网络
+- 部分测试直接调用真实 API（`afdian_test.go`），缺少 cookies.json 时自动跳过；`client_test.go` 用 httptest 本地验证超时/重试；`crawltest/` 提供假爱发电服务，`afdian/motion|album|shop` 的集成测试基于它离线运行，不连真实站点不依赖 cookie
 - `ResolveAppDir()` 通过可执行文件路径（排除 go-build 临时目录）或工作目录推断程序目录，数据目录和 cookie 路径可通过 `--dir` 和 `--cookie` 参数独立指定
 - 版本号通过 goreleaser ldflags 注入 `main.version`/`main.commit`/`main.date`
 

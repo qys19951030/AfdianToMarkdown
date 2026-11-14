@@ -20,15 +20,21 @@ var (
 )
 
 func init() {
-	//localPath, _ := os.Getwd()
-	//执行测试前，先设置cookie路径为实际本地路径
 	slog.SetDefault(logger.SetupLogger(slog.LevelInfo))
-	cfg = config.NewConfig("afdian.com", `../data`, `../cookies.json`)
-	slog.Info("cookiePath:", "path", cfg.CookiePath)
+	cfg = config.NewConfig("afdian.com", "../data", "../cookies.json")
 	var err error
 	cookieString, authToken, err = GetCookies(cfg.CookiePath)
 	if err != nil {
-		panic(fmt.Sprintf("failed to load cookies: %v", err))
+		// 缺少 cookies.json 时不 panic，需要真实网络的用例逐个跳过
+		slog.Warn("cookies.json 不可用，联网测试将跳过", "path", cfg.CookiePath, "err", err)
+	}
+}
+
+// requireCookies 需要真实网络的测试在缺少 cookie 时跳过
+func requireCookies(t *testing.T) {
+	t.Helper()
+	if cookieString == "" {
+		t.Skip("缺少 cookies.json，跳过需要真实网络的测试")
 	}
 }
 
@@ -37,6 +43,7 @@ func getAlbumUrl(AlbumId string) string {
 }
 
 func TestGetAuthorId(t *testing.T) {
+	requireCookies(t)
 	type args struct {
 		authorUrlSlug string
 		referer       string
@@ -75,6 +82,7 @@ func TestGetAuthorId(t *testing.T) {
 }
 
 func TestGetAlbumList(t *testing.T) {
+	requireCookies(t)
 	type args struct {
 		userId       string
 		referer      string
@@ -119,6 +127,7 @@ func TestGetAlbumList(t *testing.T) {
 }
 
 func TestGetAlbumInfo(t *testing.T) {
+	requireCookies(t)
 	tests := []struct {
 		name          string
 		albumId       string
@@ -144,6 +153,7 @@ func TestGetAlbumInfo(t *testing.T) {
 }
 
 func TestGetAlbumPostPage(t *testing.T) {
+	requireCookies(t)
 	tests := []struct {
 		name     string
 		albumId  string
@@ -176,6 +186,7 @@ func TestGetAlbumPostPage(t *testing.T) {
 }
 
 func TestGetProductList(t *testing.T) {
+	requireCookies(t)
 	tests := []struct {
 		name     string
 		userName string
